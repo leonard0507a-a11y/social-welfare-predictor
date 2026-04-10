@@ -1,22 +1,16 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from datetime import datetime
 
 st.set_page_config(page_title="SocialWelfarePredictorKZ", layout="wide", page_icon="🛡️")
 
-# ================== ЯЗЫКИ ==================
-languages = {
-    "Русский": "ru",
-    "English": "en",
-    "Қазақша": "kk"
-}
+# Языки
+lang_options = {"Русский": "ru", "English": "en", "Қазақша": "kk"}
+selected_lang = st.sidebar.selectbox("🌐 Тіл / Language / Язык", options=list(lang_options.keys()))
+lang = lang_options[selected_lang]
 
-selected_lang = st.sidebar.selectbox("🌐 Тіл / Language / Язык", options=list(languages.keys()))
-lang_code = languages[selected_lang]
-
-# Переводы
-t = {
+# Переводы (улучшенные)
+translations = {
     "ru": {
         "title": "SocialWelfarePredictorKZ",
         "subtitle": "Прототип системы предиктивной оценки нуждаемости в социальных услугах Казахстана",
@@ -28,24 +22,24 @@ t = {
         "digital_literacy": "Уровень цифровой грамотности (1-5)",
         "predict": "Рассчитать прогноз нуждаемости",
         "results": "Результаты прогноза",
-        "services": "Рекомендуемые социальные услуги",
-        "map": "Карта регионов Казахстана (уровень цифровой зрелости)",
-        "satisfaction": "Результаты социологического опроса (n=1200)",
+        "recommended_services": "Рекомендуемые социальные услуги",
+        "map_title": "Карта регионов Казахстана (уровень цифровой зрелости)",
+        "satisfaction_title": "Результаты опроса граждан (n=1200)",
     },
     "en": {
         "title": "SocialWelfarePredictorKZ",
-        "subtitle": "Prototype of Predictive Social Needs Assessment System in Kazakhstan",
+        "subtitle": "Prototype of Predictive Social Needs Assessment System",
         "citizen_data": "Citizen Data",
         "age": "Age (years)",
         "region": "Region",
         "income": "Average monthly income per family member (tenge)",
         "family_size": "Family size",
         "digital_literacy": "Digital literacy level (1-5)",
-        "predict": "Calculate Needs Prediction",
+        "predict": "Calculate Prediction",
         "results": "Prediction Results",
-        "services": "Recommended Social Services",
-        "map": "Map of Kazakhstan Regions (Digital Maturity)",
-        "satisfaction": "Survey Results (n=1200)",
+        "recommended_services": "Recommended Social Services",
+        "map_title": "Map of Kazakhstan Regions (Digital Maturity)",
+        "satisfaction_title": "Citizen Survey Results (n=1200)",
     },
     "kk": {
         "title": "SocialWelfarePredictorKZ",
@@ -58,98 +52,82 @@ t = {
         "digital_literacy": "Цифрлық сауаттылық деңгейі (1-5)",
         "predict": "Мұқтаждық болжамын есептеу",
         "results": "Болжам нәтижелері",
-        "services": "Ұсынылатын әлеуметтік қызметтер",
-        "map": "Қазақстан аймақтарының картасы (цифрлық жетілу деңгейі)",
-        "satisfaction": "Сауалнама нәтижелері (n=1200)",
+        "recommended_services": "Ұсынылатын әлеуметтік қызметтер",
+        "map_title": "Қазақстан аймақтарының картасы (цифрлық жетілу деңгейі)",
+        "satisfaction_title": "Азаматтар сауалнамасының нәтижелері (n=1200)",
     }
-}[lang_code]
+}
 
-# ================== БОКОВАЯ ПАНЕЛЬ ==================
+t = translations[lang]
+
+# Боковая панель
 st.sidebar.header("📋 " + t["citizen_data"])
 
 age = st.sidebar.slider(t["age"], 18, 90, 45)
-regions = ["Астана", "Алматы", "Шымкент", "Павлодарская обл.", "Карагандинская обл.", 
-           "Восточно-Казахстанская обл.", "Алматинская обл.", "Туркестанская обл.", 
-           "Мангистауская обл.", "Актюбинская обл.", "Северо-Казахстанская обл.", "Другие"]
-region = st.sidebar.selectbox(t["region"], regions)
+region_list = ["Астана", "Алматы", "Шымкент", "Павлодарская обл.", "Карагандинская обл.", 
+               "Восточно-Казахстанская обл.", "Алматинская обл.", "Туркестанская обл.", 
+               "Мангистауская обл.", "Актюбинская обл.", "Северо-Казахстанская обл."]
+region = st.sidebar.selectbox(t["region"], region_list)
 
 income = st.sidebar.number_input(t["income"], min_value=0, value=85000, step=5000)
 family_size = st.sidebar.slider(t["family_size"], 1, 10, 4)
 digital_literacy = st.sidebar.slider(t["digital_literacy"], 1, 5, 3)
 
-# ================== ОСНОВНАЯ ЧАСТЬ ==================
-st.title(t["title"])
-st.subheader(t["subtitle"])
-st.caption("Автор: Tyulyugenova L.B. | Диссертационное исследование, 2026")
-
-if st.button(t["predict"], type="primary", use_container_width=True):
-    # Простая, но реалистичная модель
-    risk = 0.25
-    if income < 70000: risk += 0.30
-    if family_size >= 5: risk += 0.18
-    if age > 60: risk += 0.22
-    if digital_literacy <= 2: risk += 0.15
-    if region in ["Туркестанская обл.", "Мангистауская обл.", "Актюбинская обл."]: risk += 0.12
+if st.sidebar.button(t["predict"], type="primary", use_container_width=True):
+    # Улучшенная модель
+    risk = 0.28
+    if income < 70000: risk += 0.32
+    if family_size >= 5: risk += 0.20
+    if age > 60: risk += 0.25
+    if digital_literacy <= 2: risk += 0.18
+    if region in ["Туркестанская обл.", "Мангистауская обл.", "Актюбинская обл."]: risk += 0.15
     
-    risk_score = round(min(0.98, risk), 2)
+    risk_score = round(min(0.97, risk), 2)
 
-    st.success(f"**{t['results']}** — Вероятность нуждаемости: **{risk_score:.0%}**")
+    st.success(f"**{t['results']}**: Вероятность нуждаемости — **{risk_score:.0%}**")
 
-    col1, col2 = st.columns(2)
-    with col1:
-        st.metric("Вероятность нуждаемости", f"{risk_score:.0%}")
-        st.metric("Уровень цифровой грамотности", f"{digital_literacy}/5")
-    with col2:
-        st.metric("Регион", region)
-        st.metric("Доход на члена семьи", f"{income:,} ₸")
+    col1, col2, col3 = st.columns(3)
+    with col1: st.metric("Вероятность нуждаемости", f"{risk_score:.0%}")
+    with col2: st.metric("Регион", region)
+    with col3: st.metric("Цифровая грамотность", f"{digital_literacy}/5")
 
     # Рекомендуемые услуги
-    st.subheader(t["services"])
+    st.subheader(t["recommended_services"])
     services = [
         "Адресная социальная помощь",
         "Пособие по инвалидности",
         "Технические средства реабилитации",
         "Пособие на рождение ребёнка",
         "Социальные услуги на дому",
-        "Лекарственное обеспечение через Social Wallet",
-        "Школьное питание (ваучеры)",
+        "Лекарственное обеспечение (Social Wallet)",
+        "Школьное питание через ваучеры",
         "Пособие по уходу за ребёнком"
     ]
-    
-    recommended = [s for s in services if risk_score > 0.45]
-    for service in recommended[:5]:
+    for service in services:
         st.write(f"✅ {service}")
 
     # Графики из диссертации
-    st.subheader(t["satisfaction"])
-    satisfaction_df = pd.DataFrame({
-        "Показатель": ["Удовлетворённость электронными услугами", "Полностью автоматизированные процессы", "Проактивные услуги"],
+    st.subheader(t["satisfaction_title"])
+    sat_df = pd.DataFrame({
+        "Показатель": ["Удовлетворённость", "Полная автоматизация", "Проактивные услуги"],
         "Значение (%)": [68, 35, 15]
     })
-    fig_bar = px.bar(satisfaction_df, x="Показатель", y="Значение (%)", text="Значение (%)", color="Показатель")
-    st.plotly_chart(fig_bar, use_container_width=True)
+    fig = px.bar(sat_df, x="Показатель", y="Значение (%)", text="Значение (%)", color="Показатель")
+    st.plotly_chart(fig, use_container_width=True)
 
-    # Карта регионов
-    st.subheader(t["map"])
-    map_data = pd.DataFrame({
-        "Регион": ["Астана", "Алматы", "Шымкент", "Павлодарская", "Карагандинская", 
-                   "Восточно-Казахстанская", "Алматинская", "Туркестанская", "Мангистауская"],
-        "Цифровая зрелость (%)": [78, 76, 70, 68, 64, 61, 58, 48, 52],
+    # Карта регионов (улучшенная)
+    st.subheader(t["map_title"])
+    map_df = pd.DataFrame({
+        "Регион": ["Астана", "Алматы", "Шымкент", "Павлодар", "Караганда", "ВКО", "Алматы обл.", "Туркестан", "Мангистау"],
+        "Цифровая зрелость (%)": [78, 76, 71, 68, 65, 62, 59, 48, 53],
         "lat": [51.17, 43.25, 42.33, 52.28, 49.97, 49.95, 43.90, 42.32, 43.65],
         "lon": [71.45, 76.95, 69.60, 76.97, 72.79, 82.61, 77.02, 69.60, 51.20]
     })
-
-    fig_map = px.scatter_mapbox(map_data, lat="lat", lon="lon", 
-                                color="Цифровая зрелость (%)",
-                                size="Цифровая зрелость (%)",
-                                hover_name="Регион",
-                                color_continuous_scale=px.colors.sequential.Blues,
-                                mapbox_style="carto-positron",
-                                zoom=4.5, height=550)
+    fig_map = px.scatter_mapbox(map_df, lat="lat", lon="lon", color="Цифровая зрелость (%)",
+                                size="Цифровая зрелость (%)", hover_name="Регион",
+                                color_continuous_scale="Blues", mapbox_style="carto-positron", zoom=4.8, height=600)
     st.plotly_chart(fig_map, use_container_width=True)
 
-    st.info("Прототип разработан в рамках диссертационного исследования Л.Б. Тюлюгеновой (2026). "
-            "Может быть интегрирован с платформой Alem.ai или Социальным кошельком.")
+    st.info("Прототип разработан Л.Б. Тюлюгеновой в рамках диссертации (2026). Может быть интегрирован с Alem.ai.")
 
-# Нижняя информация
-st.caption("© 2026 | Разработано как практическая апробация предиктивной модели (Глава 4.4)")
+st.caption("SocialWelfarePredictorKZ © 2026 | Диссертационное исследование")
